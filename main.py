@@ -11,7 +11,7 @@ from http import server
 PAGE="""\
 <html>
 <head>
-<title>picamera MJPEG streaming demo</title>
+<title>Waterboarding Plant</title>
 </head>
 <body>
 """
@@ -19,10 +19,7 @@ PAGE="""\
 PAGE += """\
 <h1>PiCamera MJPEG Streaming Demo</h1>
 <img src="stream.mjpg" width="640" height="480" />
-<h2>
-""" + str(time.time()) + "</h2>"
-
-PAGE += """\
+<div><object data="file.txt"></object></div>
 </body>
 </html>
 """
@@ -52,6 +49,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
         elif self.path == '/index.html':
             content = PAGE.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.send_header('Content-Length', len(content))
+            self.end_headers()
+            self.wfile.write(content)
+        elif self.path == '/file.txt':
+            content = str(time.time()).encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
             self.send_header('Content-Length', len(content))
