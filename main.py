@@ -2,8 +2,11 @@ import io
 import picamera
 import logging
 import socketserver
+import time
+
 from threading import Condition
 from http import server
+
 
 PAGE="""\
 <html>
@@ -11,8 +14,15 @@ PAGE="""\
 <title>picamera MJPEG streaming demo</title>
 </head>
 <body>
+"""
+
+PAGE += """\
 <h1>PiCamera MJPEG Streaming Demo</h1>
 <img src="stream.mjpg" width="640" height="480" />
+<h2>
+""" + str(time.time()) + "</h2>"
+
+PAGE += """\
 </body>
 </html>
 """
