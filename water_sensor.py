@@ -16,10 +16,11 @@ def RCtime (RCpin):
         if (GPIO.input(RCpin) == GPIO.LOW):
             reading += 1
         if reading >= 1000:
-            return 0
+            return 0, reading
         if (GPIO.input(RCpin) != GPIO.LOW):
-            return 1
+            return 1, reading
 
 while(1):
-    print(RCtime(18))
+    binary, reading = RCtime(18)
+    print(binary, reading)
 
