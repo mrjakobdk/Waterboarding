@@ -17,7 +17,7 @@ PAGE="""\
 """
 
 PAGE += """\
-<h1>PiCamera MJPEG Streaming Demo</h1>
+<h1>Waterboarding Plant</h1>
 <img src="stream.mjpg" width="640" height="480" />
 <div><object data="file.txt"></object></div>
 </body>
