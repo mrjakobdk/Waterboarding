@@ -3,9 +3,26 @@ import picamera
 import logging
 import socketserver
 import time
+import RPi.GPIO as GPIO
+import Adafruit_DHT
+import board
+import neopixel
+
 
 from threading import Condition
 from http import server
+
+#4, 18, 3
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(4, GPIO.IN)
+
+pixel_pin = board.D18
+num_pixels = 23
+ORDER = neopixel.GRB
+pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=0.1, auto_write=False,
+                           pixel_order=ORDER)
+
 
 
 PAGE="""\
@@ -18,7 +35,7 @@ PAGE="""\
 <style>
 
 h1 {
-    margin: 0px 5px;
+    margin: 0px 20px;
 }
 
 object {
@@ -26,13 +43,13 @@ object {
 }
 
 .cam_card.mdl-card {
-  width: 640px;
-  height: 600px;
+  width: 620px;
+  height: 610px;
   margin:20px;
 }
 
 .cam_card > .mdl-card__supporting-text {
-  height: 50px;
+  height: 60px;
 }
 .cam_card > .mdl-card__title {
   color: #fff;
@@ -91,13 +108,29 @@ window.setInterval(function(){
     $('#info').html(readTextFile("file.txt"));
 }, 500);
 </script>
-</html>
+</html> 
 """
 
 #<img src="stream.mjpg" width="640" height="480" />
 # $('object').each(function(index,el){
 #         $(el).attr('data', $(el).attr('data'));
 #     });
+
+def get_info():
+    light_on = GPIO.input(4)==0
+    # if not light_on:
+    #     pixels.fill(( 200, 0, 200))
+    # else:
+    #     pixels.fill((0, 0, 0))
+    # pixels.show()
+
+
+    light = "On" if light_on else "Off"
+    humidity, temperature = Adafruit_DHT.read_retry(11, 3)
+    return "Light: " + light + "</br>" + \
+           "Temperature: " + str(temperature) + "</br>" + \
+           "Humidity: " + str(humidity)
+
 
 class StreamingOutput(object):
     def __init__(self):
@@ -130,8 +163,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(content)
         elif self.path == '/file.txt':
-            text = str(time.time()) + "s"
-            content = text.encode('utf-8')
+            #text = str(time.time()) + "s"
+            content = get_info().encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
             self.send_header('Content-Length', len(content))
@@ -167,7 +200,7 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
-with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
+with picamera.PiCamera(resolution='640x480', framerate=16) as camera:
     output = StreamingOutput()
     camera.start_recording(output, format='mjpeg')
     try:
