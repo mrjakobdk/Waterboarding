@@ -11,16 +11,25 @@ from http import server
 PAGE="""\
 <html>
 <head>
-<title>Waterboarding Plant</title>
+<title>Waterboarding Plant v2</title>
 </head>
 <body>
 """
 
 PAGE += """\
-<h1>Waterboarding Plant</h1>
+<h1>Waterboarding Plant V2</h1>
 <img src="stream.mjpg" width="640" height="480" />
 <div><object data="file.txt"></object></div>
 </body>
+<script src="//code.jquery.com/jquery-1.12.4.js"></script>
+<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+while(true){
+    $('object').each(function(index,el){
+        $(el).attr('data', $(el).attr('data'));
+    });
+}
+</script>
 </html>
 """
 
