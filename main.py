@@ -12,26 +12,92 @@ PAGE="""\
 <html>
 <head>
 <title>Waterboarding Plant v2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+<style>
+
+h1 {
+    margin: 0px 5px;
+}
+
+object {
+    font-family: "Roboto","Helvetica","Arial",sans-serif;
+}
+
+.cam_card.mdl-card {
+  width: 640px;
+  height: 600px;
+  margin:20px;
+}
+
+.cam_card > .mdl-card__supporting-text {
+  height: 50px;
+}
+.cam_card > .mdl-card__title {
+  color: #fff;
+  background:
+    url('stream.mjpg') bottom right 15% no-repeat #46B6AC;
+}
+</style>
+<script>
+function readTextFile(file)
+{
+    var rawFile = new XMLHttpRequest();
+    var allText
+    rawFile.open("GET", file, false);
+    rawFile.onreadystatechange = function ()
+    {
+        if(rawFile.readyState === 4)
+        {
+            if(rawFile.status === 200 || rawFile.status == 0)
+            {
+                allText = rawFile.responseText;
+                console.log(allText);
+            }
+        }
+    }
+    rawFile.send(null);
+    return allText;
+}
+</script>
 </head>
 <body>
 """
 
 PAGE += """\
-<h1>Waterboarding Plant V2</h1>
-<img src="stream.mjpg" width="640" height="480" />
-<div><object data="file.txt"></object></div>
+<header class="mdl-layout__header mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
+<div><h1>Waterboarding Plant V2</h1></header></div>
+
+<div class="cam_card mdl-card mdl-shadow--2dp">
+  <div class="mdl-card__title mdl-card--expand">
+    <h2 class="mdl-card__title-text">PlantCam</h2>
+  </div>
+  <div class="mdl-card__supporting-text">
+    <p id="info"></p>
+  </div>
+  <div class="mdl-card__actions mdl-card--border">
+    <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+      View Updates
+    </a>
+  </div>
+</div>
+
 </body>
 <script src="//code.jquery.com/jquery-1.12.4.js"></script>
-<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script> 
 <script>
-while(true){
-    $('object').each(function(index,el){
-        $(el).attr('data', $(el).attr('data'));
-    });
-}
+window.setInterval(function(){
+    $('#info').html(readTextFile("file.txt"));
+}, 500);
 </script>
 </html>
 """
+
+#<img src="stream.mjpg" width="640" height="480" />
+# $('object').each(function(index,el){
+#         $(el).attr('data', $(el).attr('data'));
+#     });
 
 class StreamingOutput(object):
     def __init__(self):
@@ -64,7 +130,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(content)
         elif self.path == '/file.txt':
-            content = str(time.time()).encode('utf-8')
+            text = str(time.time()) + "s"
+            content = text.encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
             self.send_header('Content-Length', len(content))
