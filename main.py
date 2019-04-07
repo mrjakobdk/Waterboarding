@@ -34,6 +34,12 @@ StepPinBackward=24
 GPIO.setup(StepPinForward, GPIO.OUT)
 GPIO.setup(StepPinBackward, GPIO.OUT)
 
+def reverse(x):
+    GPIO.output(StepPinBackward, GPIO.HIGH)
+    print("backwarding running motor")
+    time.sleep(x)
+    GPIO.output(StepPinBackward, GPIO.LOW)
+
 def forward(x):
     GPIO.output(StepPinForward, GPIO.HIGH)
     print("forwarding running  motor ")
@@ -160,7 +166,8 @@ def get_info():
     if adc_value <= 30:
         counter += 1
         if counter > 3:
-            forward(1)
+            reverse(1)
+            #forward(1)
     else:
         counter -=1
     if counter < 0 or counter > 7:
