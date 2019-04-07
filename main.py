@@ -58,14 +58,15 @@ photo_ch = 0
 PAGE="""\
 <html>
 <head>
-<title>Waterboarding Plant v2</title>
+<title>Waterboarding Plant</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
 <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
 <style>
 
 h1 {
-    margin: 0px 20px;
+    margin: 0px auto;
+    display:inline-block;
 }
 
 object {
@@ -74,8 +75,8 @@ object {
 
 .cam_card.mdl-card {
   width: 620px;
-  height: 610px;
-  margin:20px;
+  height: 590px;
+  margin:20px auto;
 }
 
 .cam_card > .mdl-card__supporting-text {
@@ -114,11 +115,11 @@ function readTextFile(file)
 
 PAGE += """\
 <header class="mdl-layout__header mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
-<div><h1>Waterboarding Plant V2</h1></header></div>
+<h1>Waterboarding Plant</h1></header>
 
 <div class="cam_card mdl-card mdl-shadow--2dp">
   <div class="mdl-card__title mdl-card--expand">
-    <h2 class="mdl-card__title-text">PlantCam</h2>
+    <h2 class="mdl-card__title-text">Spoiled Plant Cam</h2>
   </div>
   <div class="mdl-card__supporting-text">
     <p id="info"></p>
@@ -141,7 +142,11 @@ window.setInterval(function(){
 #         $(el).attr('data', $(el).attr('data'));
 #     });
 
+counter = 0
+
 def get_info():
+    global counter
+
     light_on = GPIO.input(4)==0
     if not light_on:
         pixels.fill(( 200, 0, 200))
@@ -152,16 +157,23 @@ def get_info():
 
     adc_value = readadc(photo_ch, SPICLK, SPIMOSI, SPIMISO, SPICS)
 
-    if adc_value < 50:
-        forward(1)
-
+    if adc_value <= 30:
+        counter += 1
+        if counter > 3:
+            forward(1)
+    else:
+        counter -=1
+    if counter < 0 or counter > 7:
+        counter = 0
+    print("counter",counter)
+    print("adc",adc_value)
 
     light = "On" if light_on else "Off"
     humidity, temperature = Adafruit_DHT.read_retry(11, 3)
-    return "Light: " + light + "</br>" + \
-           "Temperature: " + str(temperature) + "</br>" + \
-           "Humidity: " + str(humidity) + "</br>" + \
-           "Water level: " + str("%.1f" % (adc_value / 200. * 100))
+    return "<b>Light:</b> " + light + "</br>" + \
+           "<b>Temperature:</b> " + str(temperature) + "C</br>" + \
+           "<b>Humidity:</b> " + str(humidity) + "%</br>" + \
+           "<b>Water level:</b>" + str(" %.1f" % (adc_value / 400. * 100)) + '%'
 
 
 
@@ -210,6 +222,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Pragma', 'no-cache')
             self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
             self.end_headers()
+            print("hej")
             try:
                 while True:
                     with output.condition:
@@ -234,8 +247,9 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     daemon_threads = True
 
 
-with picamera.PiCamera(resolution='640x480', framerate=16) as camera:
+with picamera.PiCamera(resolution='640x480', framerate=10) as camera:
     output = StreamingOutput()
+    camera.rotation = 90
     camera.start_recording(output, format='mjpeg')
     try:
         address = ('', 8000)
