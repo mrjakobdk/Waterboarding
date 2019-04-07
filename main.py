@@ -11,10 +11,26 @@ import neopixel
 
 from threading import Condition
 from http import server
+from water_sensor import readadc
+
+# for water sensor
+SPICLK = 11
+SPIMISO = 9
+SPIMOSI = 10
+SPICS = 8
+
+GPIO.setwarnings(False)
+GPIO.cleanup()  # clean up at the end of your script
+GPIO.setmode(GPIO.BCM)  # to specify whilch pin numbering system
+# set up the SPI interface pins
+GPIO.setup(SPIMOSI, GPIO.OUT)
+GPIO.setup(SPIMISO, GPIO.IN)
+GPIO.setup(SPICLK, GPIO.OUT)
+GPIO.setup(SPICS, GPIO.OUT)
 
 #4, 18, 3
 
-GPIO.setmode(GPIO.BCM)
+#GPIO.setmode(GPIO.BCM)
 GPIO.setup(4, GPIO.IN)
 
 pixel_pin = board.D18
@@ -23,6 +39,8 @@ ORDER = neopixel.GRB
 pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=0.1, auto_write=False,
                            pixel_order=ORDER)
 
+# photoresistor connected to adc #0
+photo_ch = 0
 
 
 PAGE="""\
@@ -49,7 +67,7 @@ object {
 }
 
 .cam_card > .mdl-card__supporting-text {
-  height: 60px;
+  height: 80px;
 }
 .cam_card > .mdl-card__title {
   color: #fff;
@@ -93,11 +111,6 @@ PAGE += """\
   <div class="mdl-card__supporting-text">
     <p id="info"></p>
   </div>
-  <div class="mdl-card__actions mdl-card--border">
-    <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-      View Updates
-    </a>
-  </div>
 </div>
 
 </body>
@@ -118,18 +131,21 @@ window.setInterval(function(){
 
 def get_info():
     light_on = GPIO.input(4)==0
-    # if not light_on:
-    #     pixels.fill(( 200, 0, 200))
-    # else:
-    #     pixels.fill((0, 0, 0))
-    # pixels.show()
+    if not light_on:
+        pixels.fill(( 200, 0, 200))
+    else:
+        pixels.fill((0, 0, 0))
+    pixels.show()
 
 
     light = "On" if light_on else "Off"
     humidity, temperature = Adafruit_DHT.read_retry(11, 3)
+    adc_value = readadc(photo_ch, SPICLK, SPIMOSI, SPIMISO, SPICS)
     return "Light: " + light + "</br>" + \
            "Temperature: " + str(temperature) + "</br>" + \
-           "Humidity: " + str(humidity)
+           "Humidity: " + str(humidity) + "</br>" + \
+           "Water level: " + str("%.1f" % (adc_value / 200. * 100))
+
 
 
 class StreamingOutput(object):
@@ -199,6 +215,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
+
 
 with picamera.PiCamera(resolution='640x480', framerate=16) as camera:
     output = StreamingOutput()

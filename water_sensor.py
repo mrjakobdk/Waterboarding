@@ -34,7 +34,7 @@ def readadc(adcnum, clockpin, mosipin, misopin, cspin):
     GPIO.output(cspin, False)  # bring CS low
 
     commandout = adcnum
-    commandout |= 0x18  # start bit + single-ended bit
+    commandout |= 0x18   # start bit + single-ended bit
     commandout <<= 3  # we only need to send 5 bits here
     for i in range(5):
         if (commandout & 0x80):
