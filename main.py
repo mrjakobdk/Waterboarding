@@ -28,6 +28,18 @@ GPIO.setup(SPIMISO, GPIO.IN)
 GPIO.setup(SPICLK, GPIO.OUT)
 GPIO.setup(SPICS, GPIO.OUT)
 
+#dc motor
+StepPinForward=23
+StepPinBackward=24
+GPIO.setup(StepPinForward, GPIO.OUT)
+GPIO.setup(StepPinBackward, GPIO.OUT)
+
+def forward(x):
+    GPIO.output(StepPinForward, GPIO.HIGH)
+    print("forwarding running  motor ")
+    time.sleep(x)
+    GPIO.output(StepPinForward, GPIO.LOW)
+
 #4, 18, 3
 
 #GPIO.setmode(GPIO.BCM)
@@ -138,9 +150,14 @@ def get_info():
     pixels.show()
 
 
+    adc_value = readadc(photo_ch, SPICLK, SPIMOSI, SPIMISO, SPICS)
+
+    if adc_value < 50:
+        forward(1)
+
+
     light = "On" if light_on else "Off"
     humidity, temperature = Adafruit_DHT.read_retry(11, 3)
-    adc_value = readadc(photo_ch, SPICLK, SPIMOSI, SPIMISO, SPICS)
     return "Light: " + light + "</br>" + \
            "Temperature: " + str(temperature) + "</br>" + \
            "Humidity: " + str(humidity) + "</br>" + \
